@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         webView.loadUrl("http://xoac.tv/lives/5bb84e3c39137d1edb49113a");
-        new FetchUrlAsyncTask().execute("http://xoac.tv/lives/5bb84e3c39137d1edb49113a");
+//        new FetchUrlAsyncTask().execute("http://xoac.tv/lives/5bb84e3c39137d1edb49113a");
 //        new FetchUrlAsyncTask().execute("https://assia.tv/live/mix-sport4/?lang=nl");
 //        new FetchUrlAsyncTask().execute("https://www.lineduball.com/watch.php?ID=12635");
 //        new FetchUrlAsyncTask().execute("https://adfhd.live/watch.php?ID=12635");
