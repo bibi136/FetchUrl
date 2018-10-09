@@ -1,7 +1,6 @@
 package transport.foxman.com.vn.geturl;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -13,9 +12,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +27,11 @@ public class MainActivity extends AppCompatActivity {
             + "[\\p{Alnum}.,%_=?&#\\-+()\\[\\]\\*$~@!:/{};']*)",
         Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
 
+    private boolean usingWebview;
+
     private WebView webView;
+
+    private List<String> m3u8Urls = new ArrayList<>();
 
     public static List<String> extractUrls(String text) {
         List<String> containedUrls = new ArrayList<>();
@@ -57,10 +58,8 @@ public class MainActivity extends AppCompatActivity {
             }
             in.close();
 
-        } catch (MalformedURLException e) {
-            System.out.println("Malformed URL: " + e.getMessage());
-        } catch (IOException e) {
-            System.out.println("I/O Error: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return stringBuffer.toString();
     }
@@ -71,7 +70,6 @@ public class MainActivity extends AppCompatActivity {
         for (String url : allUrl) {
             Uri uri = Uri.parse(url);
             String lastPathSegment = uri.getLastPathSegment();
-            Log.d("Hung", "Url: " + url + " --- lastPath = " + lastPathSegment);
             if (lastPathSegment != null && lastPathSegment.toLowerCase()
                 .endsWith(".m3u8") && !m3u8Url.contains(url)) {
                 m3u8Url.add(url);
@@ -89,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
         webView = findViewById(R.id.webview);
         webView.setVisibility(View.INVISIBLE);
         webView.getSettings().setJavaScriptEnabled(true);
-        webView.addJavascriptInterface(new MyJavaScriptInterface(this), "HtmlViewer");
+        webView.addJavascriptInterface(new MyJavaScriptInterface(), "HtmlViewer");
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView webview, String url) {
@@ -98,45 +96,55 @@ public class MainActivity extends AppCompatActivity {
                     "('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
             }
         });
-        webView.loadUrl("http://xoac.tv/lives/5bb84e3c39137d1edb49113a");
 //        new FetchUrlAsyncTask().execute("http://xoac.tv/lives/5bb84e3c39137d1edb49113a");
 //        new FetchUrlAsyncTask().execute("https://assia.tv/live/mix-sport4/?lang=nl");
-//        new FetchUrlAsyncTask().execute("https://www.lineduball.com/watch.php?ID=12635");
+        new FetchUrlAsyncTask().execute("https://www.lineduball.com/watch.php?ID=12635");
 //        new FetchUrlAsyncTask().execute("https://adfhd.live/watch.php?ID=12635");
 //        new FetchUrlAsyncTask().execute("https://www.zingsanam.com/live.php?couple=15399");
     }
 
+    void loadUrlUsingWebview(String url) {
+        Log.d("Hung", "loadUrlUsingWebview: Load using webview");
+        usingWebview = true;
+        webView.loadUrl(url);
+    }
+
     class MyJavaScriptInterface {
-
-        private Context ctx;
-
-        MyJavaScriptInterface(Context ctx) {
-            this.ctx = ctx;
-        }
 
         @JavascriptInterface
         public void showHTML(String html) {
-            List<String> strings = getm3u8Link(html);
-            for (String string : strings) {
-                Log.d("Hung", "m3u8 url: " + string);
+            List<String> links = getm3u8Link(html);
+            if (!links.isEmpty()) {
+                m3u8Urls.addAll(links);
+            } else {
+                Log.d("Hung", "Khong lay dc link nao");
             }
         }
-
     }
 
     private class FetchUrlAsyncTask extends AsyncTask<String, Void, List<String>> {
 
+        private String requestUrl;
+
         @Override
         protected List<String> doInBackground(String... strings) {
-            String data = getStringFromUrl(strings[0]);
+            requestUrl = strings[0];
+            String data = getStringFromUrl(requestUrl);
             return getm3u8Link(data);
         }
 
         @Override
         protected void onPostExecute(List<String> strings) {
             super.onPostExecute(strings);
-            for (String string : strings) {
-                Log.d("Hung", "m3u8 url: " + string);
+            if (!strings.isEmpty()) {
+                // Add all url if result not empty
+                m3u8Urls.addAll(strings);
+                for (String string : strings) {
+                    Log.d("Hung", "m3u8 url: " + string);
+                }
+            } else {
+                // try to using webview
+                loadUrlUsingWebview(requestUrl);
             }
         }
     }
