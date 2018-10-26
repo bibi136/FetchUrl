@@ -6,9 +6,11 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.LinearLayout;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -26,13 +28,19 @@ public class GetM3u8UrlHelper {
             + "[\\p{Alnum}.,%_=?&#\\-+()\\[\\]\\*$~@!:/{};']*)",
         Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
 
+    private static final String FAKE_CHROME_USERAGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X " +
+        "10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36";
+
     private WebView webView;
 
     private OnGetLinkListener listener;
 
+    private ViewGroup parent;
+
     public GetM3u8UrlHelper(Context context, OnGetLinkListener linkListener) {
-        initWebview(context);
         listener = linkListener;
+        this.parent = new LinearLayout(context);
+        initWebview(context);
     }
 
     private static List<String> extractUrls(String text) {
@@ -93,16 +101,20 @@ public class GetM3u8UrlHelper {
     private void initWebview(Context context) {
         webView = new WebView(context);
         webView.setVisibility(View.INVISIBLE);
+        webView.getSettings().setUserAgentString(FAKE_CHROME_USERAGENT);
         webView.getSettings().setJavaScriptEnabled(true);
         webView.addJavascriptInterface(new MyJavaScriptInterface(), "HtmlViewer");
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView webview, String url) {
                 super.onPageFinished(webview, url);
+                Log.d("Hung", "onPageFinished: ");
                 webview.loadUrl("javascript:window.HtmlViewer.showHTML" +
                     "('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
             }
         });
+        parent.addView(webView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT));
     }
 
     public interface OnGetLinkListener {

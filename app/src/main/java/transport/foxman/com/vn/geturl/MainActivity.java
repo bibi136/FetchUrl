@@ -3,6 +3,7 @@ package transport.foxman.com.vn.geturl;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.ViewGroup;
 
 import java.util.List;
 
@@ -13,9 +14,9 @@ public class MainActivity extends AppCompatActivity implements GetM3u8UrlHelper.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        ViewGroup viewGroup = findViewById(R.id.container);
         GetM3u8UrlHelper getM3u8UrlHelper = new GetM3u8UrlHelper(this, this);
-        getM3u8UrlHelper.getm3u8Url(
-            "http://www.goshop.com.my/biz/shp/tvshopping/shpTvOnAirSel.do;jsessionid=E3262187CA3AACF891CD70EBB474F856.ipc-tomcat1?chnlId=10541");
+        getM3u8UrlHelper.getm3u8Url("http://xoac.tv/lives/5bc22494fe6d244495a6ae77");
 //        new FetchUrlAsyncTask().execute("https://adfhd.live/watch.php?ID=12635");
 //        new FetchUrlAsyncTask().execute("https://www.zingsanam.com/live.php?couple=15399");
 //        new FetchUrlAsyncTask().execute("http://xoac.tv/lives/5bb84e3c39137d1edb49113a");
